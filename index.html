@@ -1,0 +1,1628 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Gestionnaire Besoin Fonctionnels</title>
+<style>
+body {
+    background: #c0c0c0;
+    font-family: "MS Sans Serif", "Microsoft Sans Serif", sans-serif;
+    margin: 0;
+    padding: 10px;
+    font-size: 11px;
+}
+.window {
+    background: #c0c0c0;
+    border: 2px outset #ffffff;
+    margin-bottom: 10px;
+    box-shadow: 2px 2px 0 #000;
+}
+.titlebar {
+    background: linear-gradient(to right, #000080, #1084d0);
+    color: white;
+    padding: 3px 5px;
+    font-weight: bold;
+    font-size: 11px;
+}
+.content { 
+    padding: 10px; 
+    background: #c0c0c0; 
+}
+button {
+    background: #c0c0c0;
+    border: 2px outset #ffffff;
+    padding: 3px 12px;
+    font-family: "MS Sans Serif", sans-serif;
+    font-size: 11px;
+    cursor: pointer;
+    margin: 2px;
+}
+button:active { border-style: inset; }
+button:disabled {
+    color: #808080;
+    cursor: default;
+}
+.btn-primary {
+    background: #000080;
+    color: white;
+    border: 2px outset #0000ff;
+}
+.output-box {
+    border: 2px inset #dfdfdf;
+    background: white;
+    padding: 10px;
+    font-family: "Courier New", monospace;
+    font-size: 10px;
+    white-space: pre;
+    overflow: auto;
+    max-height: 500px;
+}
+.input-group {
+    margin: 5px 0;
+}
+.input-group label {
+    display: inline-block;
+    width: 120px;
+    font-weight: bold;
+}
+.input-group input, .input-group select, .input-group textarea {
+    border: 2px inset #dfdfdf;
+    padding: 2px;
+    font-family: "MS Sans Serif", sans-serif;
+    font-size: 11px;
+    background: white;
+}
+.input-group input[type="text"], .input-group select {
+    width: 300px;
+}
+.input-group textarea {
+    width: 300px;
+    height: 60px;
+    font-family: "Courier New", monospace;
+}
+.function-list {
+    border: 2px inset #dfdfdf;
+    background: white;
+    padding: 5px;
+    min-height: 150px;
+    max-height: 350px;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    margin: 5px 0;
+}
+.function-item {
+    padding: 3px;
+    cursor: pointer;
+    border-bottom: 1px solid #e0e0e0;
+}
+.function-item:hover {
+    background: #e0e0e0;
+}
+.function-item.selected {
+    background: #000080;
+    color: white;
+}
+fieldset {
+    border: 2px groove #ffffff;
+    margin: 10px 0;
+    padding: 10px;
+}
+legend {
+    font-weight: bold;
+    padding: 0 5px;
+}
+.icom-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin: 10px 0;
+}
+.icom-section {
+    border: 1px solid #808080;
+    padding: 5px;
+    background: #f0f0f0;
+}
+.icom-section h4 {
+    margin: 0 0 5px 0;
+    font-size: 11px;
+    color: #000080;
+}
+.icom-list {
+    max-height: 80px;
+    overflow-y: auto;
+    border: 1px inset #dfdfdf;
+    background: white;
+    padding: 3px;
+    font-size: 10px;
+}
+.icom-item {
+    padding: 2px;
+    border-bottom: 1px dotted #ccc;
+}
+</style>
+</head>
+<body>
+
+<div class="window">
+<div class="titlebar">GESTIONNAIRE SADT-0 - BASE DE DONNÉES de besoin fonctionels</div>
+<div class="content" style="text-align:center;">
+<h2>Analyse et Conception Structurées (SADT)</h2>
+</div>
+</div>
+
+
+<div class="window">
+<div class="titlebar">DÉFINITION DE FONCTION (FORMAT SADT-0)</div>
+<div class="content">
+<fieldset>
+<legend>Informations de Base</legend>
+<div class="input-group">
+    <label>ID Fonction:</label>
+    <input type="text" id="funcId" placeholder="ex: A0, A1, A11, A12">
+</div>
+<div class="input-group">
+    <label>Nom Fonction:</label>
+    <input type="text" id="funcName" placeholder="Verbe à l'infinitif (ex: Traiter les données)">
+</div>
+<div class="input-group">
+    <label>Fonction Parente:</label>
+    <select id="funcParent">
+        <option value="">-- Niveau Racine --</option>
+    </select>
+</div>
+<div class="input-group">
+    <label>Description:</label>
+    <textarea id="funcDesc" placeholder="Description détaillée de la fonction"></textarea>
+</div>
+</fieldset>
+
+<fieldset>
+<legend>Définition ICOM</legend>
+<div class="icom-grid">
+    <div class="icom-section">
+        <h4>ENTRÉES (Inputs - Gauche)</h4>
+        <input type="text" id="inputItem" placeholder="Nom de l'entrée" style="width:90%;">
+        <button onclick="addICOM('inputs')">Ajouter</button>
+        <div class="icom-list" id="inputsList"></div>
+    </div>
+    
+    <div class="icom-section">
+        <h4>CONTRÔLES (Controls - Haut)</h4>
+        <input type="text" id="controlItem" placeholder="Nom du contrôle" style="width:90%;">
+        <button onclick="addICOM('controls')">Ajouter</button>
+        <div class="icom-list" id="controlsList"></div>
+    </div>
+    
+    <div class="icom-section">
+        <h4>SORTIES (Outputs - Droite)</h4>
+        <input type="text" id="outputItem" placeholder="Nom de la sortie" style="width:90%;">
+        <button onclick="addICOM('outputs')">Ajouter</button>
+        <div class="icom-list" id="outputsList"></div>
+    </div>
+    
+    <div class="icom-section">
+        <h4>MOYENS (Mechanisms - Bas)</h4>
+        <input type="text" id="mechanismItem" placeholder="Nom du moyen" style="width:90%;">
+        <button onclick="addICOM('mechanisms')">Ajouter</button>
+        <div class="icom-list" id="mechanismsList"></div>
+    </div>
+</div>
+</fieldset>
+
+<button class="btn-primary" onclick="addFunction()">AJOUTER FONCTION</button>
+<button onclick="updateFunction()">METTRE À JOUR</button>
+<button onclick="clearFunctionForm()">EFFACER FORMULAIRE</button>
+</fieldset>
+
+<fieldset>
+<legend>Base de Données des Fonctions</legend>
+<div class="function-list" id="functionList"></div>
+<button onclick="deleteFunction()">SUPPRIMER SÉLECTION</button>
+<button onclick="viewFunction()">VOIR DÉTAILS</button>
+</fieldset>
+</div>
+</div>
+
+<div class="window">
+<div class="titlebar">DIAGRAMME HIÉRARCHIQUE INTERACTIF - VUE D'ENSEMBLE</div>
+<div class="content">
+<p>Visualisation interactive de la hiérarchie des fonctions. <strong>Cliquez sur les nœuds</strong> pour développer/réduire. <strong>Glissez avec la souris</strong> pour naviguer. <strong>Molette</strong> pour zoomer.</p>
+<div style="margin-bottom:10px;">
+<button class="btn-primary" onclick="generateInteractiveTree()">GÉNÉRER ARBRE INTERACTIF</button>
+<button onclick="exportTreeSVG()">EXPORTER SVG</button>
+<button onclick="exportTreePNG()">EXPORTER PNG</button>
+<button onclick="generateMermaid()">GÉNÉRER MERMAID (texte)</button>
+</div>
+<div id="treeContainer" style="display:none;margin-top:10px;border:2px inset #dfdfdf;background:white;overflow:hidden;height:700px;cursor:grab;">
+<svg id="treeSvg" width="100%" height="700"></svg>
+</div>
+<div id="mermaidBox" style="display:none;margin-top:10px;">
+<div id="mermaidContent" class="output-box"></div>
+<button onclick="copyMermaid()">COPIER MERMAID</button>
+</div>
+</div>
+</div>
+
+
+<div class="window">
+<div class="titlebar">EXPORT BASE DE DONNÉES</div>
+<div class="content">
+<fieldset>
+<legend>Export Complet de la Base</legend>
+<button class="btn-primary" onclick="exportAllJSON()">EXPORTER TOUT (JSON)</button>
+<button onclick="exportAllXML()">EXPORTER TOUT (XML)</button>
+<button class="btn-primary" onclick="exportAllZIP()">EXPORTER TOUT EN ZIP</button>
+<p style="font-size:10px;color:#666;">ZIP contient: BD complète JSON/XML + tous les PNG SADT + vue d'ensemble Mermaid</p>
+</fieldset>
+
+<fieldset>
+<legend>Export de Fonction Individuelle</legend>
+<button onclick="exportFunctionJSON()">EXPORTER SÉLECTION (JSON)</button>
+<button onclick="exportFunctionXML()">EXPORTER SÉLECTION (XML)</button>
+<button onclick="exportFunctionMermaid()">EXPORTER SÉLECTION (MERMAID SADT-0)</button>
+</fieldset>
+
+<fieldset>
+<legend>Import Base de Données</legend>
+<input type="file" id="importFile" accept=".json,.xml">
+<button class="btn-primary" onclick="importData()">IMPORTER FICHIER</button>
+</fieldset>
+
+<div id="exportBox" style="display:none;margin-top:10px;">
+<div id="exportContent" class="output-box"></div>
+</div>
+</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+
+<script>
+
+let db = {
+    version: "3.0",
+    metadata: {
+        created: new Date().toISOString(),
+        modified: new Date().toISOString(),
+        project: "Analyse SADT-0"
+    },
+    functions: []
+};
+
+let selectedFunction = null;
+let currentICOM = {
+    inputs: [],
+    controls: [],
+    outputs: [],
+    mechanisms: []
+};
+
+
+window.onload = function() {
+    refreshUI();
+};
+
+function loadSampleData() {
+    db.functions = [
+        { 
+            id: "A0", 
+            name: "Gérer le système", 
+            parent: null, 
+            description: "Fonction principale du système",
+            inputs: ["Données brutes", "Requêtes utilisateur"],
+            controls: ["Politiques de sécurité", "Règles métier"],
+            outputs: ["Résultats traités", "Rapports"],
+            mechanisms: ["Serveur principal", "Base de données"]
+        },
+        { 
+            id: "A1", 
+            name: "Traiter les entrées", 
+            parent: "A0", 
+            description: "Validation et transformation des données entrantes",
+            inputs: ["Données brutes"],
+            controls: ["Format requis", "Règles de validation"],
+            outputs: ["Données validées"],
+            mechanisms: ["Module de validation", "Analyseur syntaxique"]
+        },
+        { 
+            id: "A2", 
+            name: "Exécuter le traitement", 
+            parent: "A0", 
+            description: "Traitement principal des données",
+            inputs: ["Données validées"],
+            controls: ["Algorithmes", "Paramètres"],
+            outputs: ["Résultats calculés"],
+            mechanisms: ["Moteur de calcul", "Processeur"]
+        }
+    ];
+}
+
+
+function addICOM(type) {
+    const inputId = type === 'inputs' ? 'inputItem' :
+                    type === 'controls' ? 'controlItem' :
+                    type === 'outputs' ? 'outputItem' : 'mechanismItem';
+    
+    const value = document.getElementById(inputId).value.trim();
+    if (!value) {
+        alert("Veuillez entrer une valeur!");
+        return;
+    }
+    
+    if (!currentICOM[type].includes(value)) {
+        currentICOM[type].push(value);
+        document.getElementById(inputId).value = '';
+        refreshICOMDisplay(type);
+    }
+}
+
+function removeICOM(type, item) {
+    currentICOM[type] = currentICOM[type].filter(i => i !== item);
+    refreshICOMDisplay(type);
+}
+
+function refreshICOMDisplay(type) {
+    const listId = type + 'List';
+    const listDiv = document.getElementById(listId);
+    listDiv.innerHTML = '';
+    
+    if (currentICOM[type].length === 0) {
+        listDiv.innerHTML = '<div style="padding:5px;color:#999;">Aucun élément</div>';
+        return;
+    }
+    
+    currentICOM[type].forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'icom-item';
+        const escapedItem = escapeHTML(item);
+        div.innerHTML = `${item} <span style="float:right;cursor:pointer;color:red;font-weight:bold;" onclick="removeICOM('${type}', '${escapedItem}')">X</span>`;
+        listDiv.appendChild(div);
+    });
+}
+
+function escapeHTML(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
+function clearICOM() {
+    currentICOM = {
+        inputs: [],
+        controls: [],
+        outputs: [],
+        mechanisms: []
+    };
+    ['inputs', 'controls', 'outputs', 'mechanisms'].forEach(type => {
+        refreshICOMDisplay(type);
+    });
+}
+
+
+function addFunction() {
+    const id = document.getElementById('funcId').value.trim();
+    const name = document.getElementById('funcName').value.trim();
+    const parent = document.getElementById('funcParent').value || null;
+    const description = document.getElementById('funcDesc').value.trim();
+    
+    if (!id || !name) {
+        alert("L'ID et le nom de fonction sont requis!");
+        return;
+    }
+    
+    if (db.functions.find(f => f.id === id)) {
+        alert("L'ID de fonction existe déjà!");
+        return;
+    }
+    
+    const newFunc = {
+        id,
+        name,
+        parent,
+        description,
+        inputs: [...currentICOM.inputs],
+        controls: [...currentICOM.controls],
+        outputs: [...currentICOM.outputs],
+        mechanisms: [...currentICOM.mechanisms]
+    };
+    
+    db.functions.push(newFunc);
+    db.metadata.modified = new Date().toISOString();
+    
+    clearFunctionForm();
+    refreshUI();
+    alert("Fonction ajoutée avec succès!");
+}
+
+function updateFunction() {
+    if (!selectedFunction) {
+        alert("Veuillez sélectionner une fonction à mettre à jour!");
+        return;
+    }
+    
+    const name = document.getElementById('funcName').value.trim();
+    const parent = document.getElementById('funcParent').value || null;
+    const description = document.getElementById('funcDesc').value.trim();
+    
+    if (!name) {
+        alert("Le nom de fonction est requis!");
+        return;
+    }
+    
+    selectedFunction.name = name;
+    selectedFunction.parent = parent;
+    selectedFunction.description = description;
+    selectedFunction.inputs = [...currentICOM.inputs];
+    selectedFunction.controls = [...currentICOM.controls];
+    selectedFunction.outputs = [...currentICOM.outputs];
+    selectedFunction.mechanisms = [...currentICOM.mechanisms];
+    
+    db.metadata.modified = new Date().toISOString();
+    
+    clearFunctionForm();
+    refreshUI();
+    alert("Fonction mise à jour avec succès!");
+}
+
+function deleteFunction() {
+    if (!selectedFunction) {
+        alert("Veuillez sélectionner une fonction à supprimer!");
+        return;
+    }
+    
+    if (!confirm(`Supprimer la fonction ${selectedFunction.id}?`)) {
+        return;
+    }
+    
+    db.functions = db.functions.filter(f => f.id !== selectedFunction.id);
+    db.functions.forEach(f => {
+        if (f.parent === selectedFunction.id) {
+            f.parent = null;
+        }
+    });
+    
+    db.metadata.modified = new Date().toISOString();
+    selectedFunction = null;
+    clearFunctionForm();
+    refreshUI();
+}
+
+function selectFunction(func) {
+    selectedFunction = func;
+    document.getElementById('funcId').value = func.id;
+    document.getElementById('funcId').disabled = true;
+    document.getElementById('funcName').value = func.name;
+    document.getElementById('funcParent').value = func.parent || '';
+    document.getElementById('funcDesc').value = func.description || '';
+    
+    currentICOM.inputs = [...(func.inputs || [])];
+    currentICOM.controls = [...(func.controls || [])];
+    currentICOM.outputs = [...(func.outputs || [])];
+    currentICOM.mechanisms = [...(func.mechanisms || [])];
+    
+    ['inputs', 'controls', 'outputs', 'mechanisms'].forEach(type => {
+        refreshICOMDisplay(type);
+    });
+    
+    refreshFunctionList();
+}
+
+function viewFunction() {
+    if (!selectedFunction) {
+        alert("Veuillez sélectionner une fonction à visualiser!");
+        return;
+    }
+    
+    const details = generateFunctionDetails(selectedFunction);
+    document.getElementById('exportContent').textContent = details;
+    document.getElementById('exportBox').style.display = 'block';
+}
+
+function clearFunctionForm() {
+    selectedFunction = null;
+    document.getElementById('funcId').value = '';
+    document.getElementById('funcId').disabled = false;
+    document.getElementById('funcName').value = '';
+    document.getElementById('funcParent').value = '';
+    document.getElementById('funcDesc').value = '';
+    clearICOM();
+    refreshFunctionList();
+}
+
+
+function generateFunctionSADT(func) {
+    let m = `graph TB\n\n`;
+    m += `    %% Diagramme SADT-0 pour la Fonction ${func.id}\n`;
+    m += `    %% Fonction: ${func.name}\n\n`;
+    
+    const fid = func.id.replace(/[.-]/g, "_");
+    
+    
+    func.inputs.forEach((input, idx) => {
+        const iid = `I${idx}_${fid}`;
+        m += `    ${iid}["${input}"]\n`;
+        m += `    ${iid} -->|Entrée| ${fid}\n`;
+    });
+    
+    
+    func.controls.forEach((control, idx) => {
+        const cid = `C${idx}_${fid}`;
+        m += `    ${cid}["${control}"]\n`;
+        m += `    ${cid} -.->|Contrôle| ${fid}\n`;
+    });
+    
+    
+    m += `\n    ${fid}["<b>${func.name}</b><br/><small>${func.id}</small>"]\n\n`;
+    
+    
+    func.outputs.forEach((output, idx) => {
+        const oid = `O${idx}_${fid}`;
+        m += `    ${fid} -->|Sortie| ${oid}["${output}"]\n`;
+    });
+    
+    
+    func.mechanisms.forEach((mech, idx) => {
+        const mid = `M${idx}_${fid}`;
+        m += `    ${mid}["${mech}"]\n`;
+        m += `    ${mid} -.->|Moyen| ${fid}\n`;
+    });
+    
+    m += `\n    %% Stylisation\n`;
+    m += `    classDef funcBox fill:#4A90E2,stroke:#2E5C8A,stroke-width:3px,color:#fff\n`;
+    m += `    classDef inputBox fill:#90EE90,stroke:#228B22,stroke-width:2px\n`;
+    m += `    classDef controlBox fill:#FFD700,stroke:#DAA520,stroke-width:2px\n`;
+    m += `    classDef outputBox fill:#FFA07A,stroke:#FF6347,stroke-width:2px\n`;
+    m += `    classDef mechBox fill:#DDA0DD,stroke:#9370DB,stroke-width:2px\n\n`;
+    
+    m += `    class ${fid} funcBox\n`;
+    
+    func.inputs.forEach((_, idx) => {
+        m += `    class I${idx}_${fid} inputBox\n`;
+    });
+    func.controls.forEach((_, idx) => {
+        m += `    class C${idx}_${fid} controlBox\n`;
+    });
+    func.outputs.forEach((_, idx) => {
+        m += `    class O${idx}_${fid} outputBox\n`;
+    });
+    func.mechanisms.forEach((_, idx) => {
+        m += `    class M${idx}_${fid} mechBox\n`;
+    });
+    
+    return m;
+}
+
+
+function generateMermaid() {
+    if (db.functions.length === 0) {
+        alert("Aucune fonction définie!");
+        return;
+    }
+    
+    let m = "graph LR\n\n";
+    m += "    %% Vue hiérarchique des fonctions SADT\n";
+    m += "    %% Détails ICOM omis pour clarté\n\n";
+    
+    function makeId(id) {
+        return id.replace(/[.-]/g, "_");
+    }
+    
+    const funcMap = {};
+    db.functions.forEach(f => {
+        funcMap[f.id] = { ...f, children: [] };
+    });
+    
+    db.functions.forEach(f => {
+        if (f.parent && funcMap[f.parent]) {
+            funcMap[f.parent].children.push(funcMap[f.id]);
+        }
+    });
+    
+    
+    db.functions.forEach(f => {
+        const nodeId = makeId(f.id);
+        const formattedId = formatFunctionId(f.id);
+        const label = `${formattedId}: ${f.name}`;
+        m += `    ${nodeId}["${label}"]\n`;
+    });
+    
+    m += "\n";
+    
+    
+    db.functions.forEach(f => {
+        if (f.parent && funcMap[f.parent]) {
+            const parentId = makeId(f.parent);
+            const childId = makeId(f.id);
+            m += `    ${parentId} --> ${childId}\n`;
+        }
+    });
+    
+    m += "\n    %% Stylisation\n";
+    m += "    classDef funcBox fill:#e3f2fd,stroke:#1976d2,stroke-width:2px,color:#000\n\n";
+    
+    db.functions.forEach(f => {
+        m += `    class ${makeId(f.id)} funcBox\n`;
+    });
+    
+    document.getElementById('mermaidContent').textContent = m;
+    document.getElementById('mermaidBox').style.display = 'block';
+}
+
+function copyMermaid() {
+    const content = document.getElementById('mermaidContent').textContent;
+    if (!content) {
+        alert("Générez d'abord le diagramme!");
+        return;
+    }
+    
+    navigator.clipboard.writeText(content).then(() => {
+        alert("Diagramme Mermaid copié dans le presse-papiers!");
+    });
+}
+
+
+function generateFunctionDetails(func) {
+    const formattedId = formatFunctionId(func.id);
+    let details = `DÉTAILS DE LA FONCTION SADT-0\n`;
+    details += `${"=".repeat(50)}\n\n`;
+    details += `ID:          ${formattedId}\n`;
+    details += `Nom:         ${func.name}\n`;
+    details += `Parent:      ${func.parent ? formatFunctionId(func.parent) : "Racine"}\n`;
+    details += `Description: ${func.description || "N/A"}\n\n`;
+    
+    details += `ENTRÉES (Inputs):\n`;
+    (func.inputs || []).forEach(i => details += `  - ${i}\n`);
+    
+    details += `\nCONTRÔLES (Controls):\n`;
+    (func.controls || []).forEach(c => details += `  - ${c}\n`);
+    
+    details += `\nSORTIES (Outputs):\n`;
+    (func.outputs || []).forEach(o => details += `  - ${o}\n`);
+    
+    details += `\nMOYENS (Mechanisms):\n`;
+    (func.mechanisms || []).forEach(m => details += `  - ${m}\n`);
+    
+    return details;
+}
+
+
+function exportAllJSON() {
+    const json = JSON.stringify(db, null, 2);
+    downloadFile('base-sadt.json', json);
+    document.getElementById('exportContent').textContent = json;
+    document.getElementById('exportBox').style.display = 'block';
+}
+
+function exportAllXML() {
+    const xml = generateDatabaseXML();
+    downloadFile('base-sadt.xml', xml);
+    document.getElementById('exportContent').textContent = xml;
+    document.getElementById('exportBox').style.display = 'block';
+}
+
+function generateDatabaseXML() {
+    let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+    xml += '<base-sadt version="' + db.version + '">\n';
+    xml += '  <metadonnees>\n';
+    xml += `    <creation>${db.metadata.created}</creation>\n`;
+    xml += `    <modification>${db.metadata.modified}</modification>\n`;
+    xml += `    <projet>${escapeXML(db.metadata.project)}</projet>\n`;
+    xml += '  </metadonnees>\n';
+    
+    xml += '  <fonctions>\n';
+    db.functions.forEach(f => {
+        xml += `    <fonction id="${escapeXML(f.id)}" nom="${escapeXML(f.name)}"`;
+        if (f.parent) xml += ` parent="${escapeXML(f.parent)}"`;
+        xml += '>\n';
+        
+        if (f.description) {
+            xml += `      <description>${escapeXML(f.description)}</description>\n`;
+        }
+        
+        xml += '      <entrees>\n';
+        (f.inputs || []).forEach(i => {
+            xml += `        <entree>${escapeXML(i)}</entree>\n`;
+        });
+        xml += '      </entrees>\n';
+        
+        xml += '      <controles>\n';
+        (f.controls || []).forEach(c => {
+            xml += `        <controle>${escapeXML(c)}</controle>\n`;
+        });
+        xml += '      </controles>\n';
+        
+        xml += '      <sorties>\n';
+        (f.outputs || []).forEach(o => {
+            xml += `        <sortie>${escapeXML(o)}</sortie>\n`;
+        });
+        xml += '      </sorties>\n';
+        
+        xml += '      <moyens>\n';
+        (f.mechanisms || []).forEach(m => {
+            xml += `        <moyen>${escapeXML(m)}</moyen>\n`;
+        });
+        xml += '      </moyens>\n';
+        
+        xml += '    </fonction>\n';
+    });
+    xml += '  </fonctions>\n';
+    xml += '</base-sadt>';
+    
+    return xml;
+}
+
+
+const SV = {
+    W: 900, H: 600,
+    BX: 280, BY: 180, BW: 240, BH: 140,
+    STUB: 100, PAD: 8
+};
+
+function sadtWrap(c, text, cx, cy, maxW, lh) {
+    const words = text.split(' ');
+    let line = '', lines = [];
+    words.forEach(w => {
+        const test = line ? line + ' ' + w : w;
+        if (c.measureText(test).width > maxW && line) { lines.push(line); line = w; }
+        else line = test;
+    });
+    if (line) lines.push(line);
+    const startY = cy - (lines.length - 1) * lh / 2;
+    lines.forEach((l, i) => c.fillText(l, cx, startY + i * lh));
+}
+
+async function generateSADTPNG(func) {
+    return new Promise((resolve) => {
+        const canvas = document.createElement('canvas');
+        canvas.width = SV.W;
+        canvas.height = SV.H;
+        const c = canvas.getContext('2d');
+        
+        
+        c.fillStyle = '#ffffff';
+        c.fillRect(0, 0, SV.W, SV.H);
+        
+        const bx = SV.BX, by = SV.BY, bw = SV.BW, bh = SV.BH;
+        
+        
+        (func.inputs || []).forEach((inp, i) => {
+            const y = by + bh * (i + 1) / (func.inputs.length + 1);
+            c.save();
+            c.strokeStyle = '#000080'; c.fillStyle = '#000080'; c.lineWidth = 1.5;
+            c.beginPath(); c.moveTo(bx - SV.STUB, y); c.lineTo(bx, y); c.stroke();
+            c.beginPath();
+            c.moveTo(bx, y); c.lineTo(bx - 9, y - 4); c.lineTo(bx - 9, y + 4);
+            c.closePath(); c.fill();
+            c.font = '11px "MS Sans Serif", sans-serif';
+            c.textAlign = 'right';
+            c.fillText(inp, bx - SV.STUB - 4, y + 4);
+            c.restore();
+        });
+        
+        
+        (func.controls || []).forEach((ctrl, i) => {
+            const x = bx + bw * (i + 1) / (func.controls.length + 1);
+            const yOffset = i * 15; 
+            c.save();
+            c.strokeStyle = '#800000'; c.fillStyle = '#800000'; c.lineWidth = 1.5;
+            c.beginPath(); c.moveTo(x, by - SV.STUB + yOffset); c.lineTo(x, by); c.stroke();
+            c.beginPath();
+            c.moveTo(x, by); c.lineTo(x - 4, by - 9); c.lineTo(x + 4, by - 9);
+            c.closePath(); c.fill();
+            c.font = '11px "MS Sans Serif", sans-serif';
+            c.textAlign = 'center';
+            c.fillText(ctrl, x, by - SV.STUB - 6 + yOffset);
+            c.restore();
+        });
+        
+        
+        (func.outputs || []).forEach((out, i) => {
+            const y = by + bh * (i + 1) / (func.outputs.length + 1);
+            const ax = bx + bw + SV.STUB;
+            c.save();
+            c.strokeStyle = '#006400'; c.fillStyle = '#006400'; c.lineWidth = 1.5;
+            c.beginPath(); c.moveTo(bx + bw, y); c.lineTo(ax, y); c.stroke();
+            c.beginPath();
+            c.moveTo(ax, y); c.lineTo(ax - 9, y - 4); c.lineTo(ax - 9, y + 4);
+            c.closePath(); c.fill();
+            c.font = '11px "MS Sans Serif", sans-serif';
+            c.textAlign = 'left';
+            c.fillText(out, ax + 4, y + 4);
+            c.restore();
+        });
+        
+        
+        (func.mechanisms || []).forEach((mech, i) => {
+            const x = bx + bw * (i + 1) / (func.mechanisms.length + 1);
+            const yOffset = -i * 15; 
+            c.save();
+            c.strokeStyle = '#4b0082'; c.fillStyle = '#4b0082'; c.lineWidth = 1.5;
+            c.beginPath(); c.moveTo(x, by + bh + SV.STUB + yOffset); c.lineTo(x, by + bh); c.stroke();
+            c.beginPath();
+            c.moveTo(x, by + bh); c.lineTo(x - 4, by + bh + 9); c.lineTo(x + 4, by + bh + 9);
+            c.closePath(); c.fill();
+            c.font = '11px "MS Sans Serif", sans-serif';
+            c.textAlign = 'center';
+            c.fillText(mech, x, by + bh + SV.STUB + 14 + yOffset);
+            c.restore();
+        });
+        
+        
+        c.save();
+        c.fillStyle = '#ffffff'; c.strokeStyle = '#000000'; c.lineWidth = 2;
+        c.fillRect(bx, by, bw, bh);
+        c.strokeRect(bx, by, bw, bh);
+        
+        
+        c.font = 'bold 14px "MS Sans Serif", sans-serif';
+        c.fillStyle = '#000000'; c.textAlign = 'center';
+        sadtWrap(c, func.name, bx + bw / 2, by + bh / 2 - 8, bw - 20, 18);
+        
+        
+        c.font = 'bold 12px "Courier New", monospace';
+        c.fillStyle = '#000080'; c.textAlign = 'right';
+        const formattedId = formatFunctionId(func.id);
+        c.fillText(formattedId, bx + bw - SV.PAD, by + bh - SV.PAD);
+        c.restore();
+        
+        
+        c.save();
+        c.strokeStyle = '#808080'; c.lineWidth = 1;
+        c.strokeRect(1, 1, SV.W - 2, SV.H - 2);
+        c.font = '11px "MS Sans Serif", sans-serif';
+        c.fillStyle = '#808080';
+        c.textAlign = 'left';
+        c.fillText('NODE: ' + formattedId, 8, SV.H - 8);
+        c.textAlign = 'right';
+        c.fillText('TITLE: ' + func.name, SV.W - 8, SV.H - 8);
+        c.restore();
+        
+        canvas.toBlob((blob) => {
+            resolve(blob);
+        });
+    });
+}
+
+async function exportAllZIP() {
+    if (typeof JSZip === 'undefined') {
+        alert("Bibliothèque JSZip non chargée. Vérifiez la connexion Internet.");
+        return;
+    }
+    
+    const zip = new JSZip();
+    
+    
+    zip.file("base-sadt.json", JSON.stringify(db, null, 2));
+    zip.file("base-sadt.xml", generateDatabaseXML());
+    
+    
+    for (const func of db.functions) {
+        const formattedId = formatFunctionId(func.id);
+        
+        
+        const pngBlob = await generateSADTPNG(func);
+        zip.file(
+            `${formattedId}.png`,
+            pngBlob
+        );
+    }
+    
+    
+    if (db.functions.length > 0) {
+        const overviewMermaid = generateMermaidOverview();
+        zip.file("vue-hierarchie.mmd", overviewMermaid);
+    }
+    
+    
+    const blob = await zip.generateAsync({ type: "blob" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `base-sadt-${new Date().toISOString().split('T')[0]}.zip`;
+    a.click();
+    URL.revokeObjectURL(url);
+    
+    alert("Fichier ZIP généré avec tous les PNG SADT!");
+}
+
+function generateFunctionXML(func) {
+    let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+    xml += `<fonction id="${escapeXML(func.id)}" nom="${escapeXML(func.name)}"`;
+    if (func.parent) xml += ` parent="${escapeXML(func.parent)}"`;
+    xml += '>\n';
+    
+    if (func.description) {
+        xml += `  <description>${escapeXML(func.description)}</description>\n`;
+    }
+    
+    xml += '  <entrees>\n';
+    (func.inputs || []).forEach(i => {
+        xml += `    <entree>${escapeXML(i)}</entree>\n`;
+    });
+    xml += '  </entrees>\n';
+    
+    xml += '  <controles>\n';
+    (func.controls || []).forEach(c => {
+        xml += `    <controle>${escapeXML(c)}</controle>\n`;
+    });
+    xml += '  </controles>\n';
+    
+    xml += '  <sorties>\n';
+    (func.outputs || []).forEach(o => {
+        xml += `    <sortie>${escapeXML(o)}</sortie>\n`;
+    });
+    xml += '  </sorties>\n';
+    
+    xml += '  <moyens>\n';
+    (func.mechanisms || []).forEach(m => {
+        xml += `    <moyen>${escapeXML(m)}</moyen>\n`;
+    });
+    xml += '  </moyens>\n';
+    
+    xml += '</fonction>';
+    
+    return xml;
+}
+
+function generateMermaidOverview() {
+    let m = "graph TD\n\n";
+    m += "    %% Vue hiérarchique radiale des fonctions SADT\n\n";
+    
+    function makeId(id) {
+        return id.replace(/[.-]/g, "_");
+    }
+    
+    const funcMap = {};
+    db.functions.forEach(f => {
+        funcMap[f.id] = { ...f, children: [] };
+    });
+    
+    db.functions.forEach(f => {
+        if (f.parent && funcMap[f.parent]) {
+            funcMap[f.parent].children.push(funcMap[f.id]);
+        }
+    });
+    
+    
+    const rootNodes = db.functions.filter(f => !f.parent);
+    
+    
+    if (rootNodes.length > 1) {
+        m += `    CENTER((("SYSTÈME")))\n`;
+    }
+    
+    
+    db.functions.forEach(f => {
+        const nodeId = makeId(f.id);
+        const formattedId = formatFunctionId(f.id);
+        const label = `${formattedId}: ${f.name}`;
+        m += `    ${nodeId}["${label}"]\n`;
+    });
+    
+    m += "\n";
+    
+    
+    if (rootNodes.length > 1) {
+        rootNodes.forEach(f => {
+            const nodeId = makeId(f.id);
+            m += `    CENTER -.-> ${nodeId}\n`;
+        });
+        m += "\n";
+    }
+    
+    
+    db.functions.forEach(f => {
+        if (f.parent && funcMap[f.parent]) {
+            const parentId = makeId(f.parent);
+            const childId = makeId(f.id);
+            m += `    ${parentId} --> ${childId}\n`;
+        }
+    });
+    
+    
+    m += "\n    classDef funcBox fill:#e3f2fd,stroke:#1976d2,stroke-width:2px,color:#000\n";
+    m += "    classDef centerNode fill:#fff9c4,stroke:#f57c00,stroke-width:3px,color:#000\n\n";
+    
+    db.functions.forEach(f => {
+        m += `    class ${makeId(f.id)} funcBox\n`;
+    });
+    
+    if (rootNodes.length > 1) {
+        m += `    class CENTER centerNode\n`;
+    }
+    
+    return m;
+}
+
+function exportFunctionJSON() {
+    if (!selectedFunction) {
+        alert("Veuillez sélectionner une fonction à exporter!");
+        return;
+    }
+    
+    const formattedId = formatFunctionId(selectedFunction.id);
+    const json = JSON.stringify(selectedFunction, null, 2);
+    downloadFile(`fonction-${formattedId}.json`, json);
+}
+
+function exportFunctionXML() {
+    if (!selectedFunction) {
+        alert("Veuillez sélectionner une fonction à exporter!");
+        return;
+    }
+    
+    const formattedId = formatFunctionId(selectedFunction.id);
+    const xml = generateFunctionXML(selectedFunction);
+    downloadFile(`fonction-${formattedId}.xml`, xml);
+}
+
+function exportFunctionMermaid() {
+    if (!selectedFunction) {
+        alert("Veuillez sélectionner une fonction à exporter!");
+        return;
+    }
+    
+    const formattedId = formatFunctionId(selectedFunction.id);
+    const mermaid = generateFunctionSADT(selectedFunction);
+    downloadFile(`fonction-${formattedId}-sadt0.mmd`, mermaid);
+    
+    document.getElementById('exportContent').textContent = mermaid;
+    document.getElementById('exportBox').style.display = 'block';
+}
+
+
+function importData() {
+    const file = document.getElementById('importFile').files[0];
+    if (!file) {
+        alert("Veuillez sélectionner un fichier à importer!");
+        return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const content = e.target.result;
+            
+            if (file.name.endsWith('.json')) {
+                const imported = JSON.parse(content);
+                
+                
+                if (imported.functions && Array.isArray(imported.functions)) {
+                    
+                    imported.functions = imported.functions.map(f => ({
+                        id: f.id || '',
+                        name: f.name || '',
+                        parent: f.parent || null,
+                        description: f.description || '',
+                        inputs: Array.isArray(f.inputs) ? f.inputs : [],
+                        controls: Array.isArray(f.controls) ? f.controls : [],
+                        outputs: Array.isArray(f.outputs) ? f.outputs : [],
+                        mechanisms: Array.isArray(f.mechanisms) ? f.mechanisms : []
+                    }));
+                    
+                    
+                    if (imported.metadata) {
+                        db.metadata = imported.metadata;
+                    }
+                    if (imported.version) {
+                        db.version = imported.version;
+                    }
+                    
+                    db.functions = imported.functions;
+                    db.metadata.modified = new Date().toISOString();
+                    
+                    refreshUI();
+                    alert(`Base de données JSON importée avec succès! ${db.functions.length} fonction(s) chargée(s).`);
+                } else {
+                    alert("Format JSON invalide! Le fichier doit contenir un objet avec une propriété 'functions' de type array.");
+                }
+            } else if (file.name.endsWith('.xml')) {
+                parseXMLDatabase(content);
+                refreshUI();
+                alert(`Base de données XML importée avec succès! ${db.functions.length} fonction(s) chargée(s).`);
+            }
+        } catch (err) {
+            alert("Échec de l'import: " + err.message);
+            console.error("Import error:", err);
+        }
+    };
+    
+    reader.readAsText(file);
+}
+
+function parseXMLDatabase(xmlString) {
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(xmlString, "text/xml");
+    
+    db.functions = [];
+    
+    const funcNodes = xmlDoc.getElementsByTagName('fonction');
+    for (let node of funcNodes) {
+        const func = {
+            id: node.getAttribute('id'),
+            name: node.getAttribute('nom') || node.getAttribute('name'),
+            parent: node.getAttribute('parent') || null,
+            description: '',
+            inputs: [],
+            controls: [],
+            outputs: [],
+            mechanisms: []
+        };
+        
+        const descNode = node.getElementsByTagName('description')[0];
+        if (descNode) {
+            func.description = descNode.textContent;
+        }
+        
+        
+        const inputNodes = node.getElementsByTagName('entree');
+        for (let item of inputNodes) {
+            func.inputs.push(item.textContent);
+        }
+        
+        
+        const controlNodes = node.getElementsByTagName('controle');
+        for (let item of controlNodes) {
+            func.controls.push(item.textContent);
+        }
+        
+        
+        const outputNodes = node.getElementsByTagName('sortie');
+        for (let item of outputNodes) {
+            func.outputs.push(item.textContent);
+        }
+        
+        
+        const mechNodes = node.getElementsByTagName('moyen');
+        for (let item of mechNodes) {
+            func.mechanisms.push(item.textContent);
+        }
+        
+        db.functions.push(func);
+    }
+}
+
+
+function refreshUI() {
+    refreshFunctionList();
+    updateParentDropdown();
+}
+
+function refreshFunctionList() {
+    const listDiv = document.getElementById('functionList');
+    listDiv.innerHTML = '';
+    
+    if (db.functions.length === 0) {
+        listDiv.innerHTML = '<div style="padding:10px;color:#808080;">Aucune fonction définie</div>';
+        return;
+    }
+    
+    const sorted = [...db.functions].sort((a, b) => a.id.localeCompare(b.id));
+    
+    sorted.forEach(func => {
+        const div = document.createElement('div');
+        div.className = 'function-item';
+        if (selectedFunction && selectedFunction.id === func.id) {
+            div.className += ' selected';
+        }
+        
+        const parentText = func.parent ? ` (enfant de ${func.parent})` : ' (racine)';
+        const icomCount = (func.inputs?.length || 0) + (func.controls?.length || 0) + 
+                         (func.outputs?.length || 0) + (func.mechanisms?.length || 0);
+        div.textContent = `${func.id}: ${func.name}${parentText} [ICOM: ${icomCount}]`;
+        div.onclick = () => selectFunction(func);
+        
+        listDiv.appendChild(div);
+    });
+}
+
+function updateParentDropdown() {
+    const select = document.getElementById('funcParent');
+    select.innerHTML = '<option value="">-- Niveau Racine --</option>';
+    
+    db.functions.forEach(f => {
+        const option = document.createElement('option');
+        option.value = f.id;
+        option.textContent = `${f.id}: ${f.name}`;
+        select.appendChild(option);
+    });
+}
+
+
+function formatFunctionId(id) {
+    
+    if (!id || id.length <= 2) return id;
+    
+    
+    if (id.includes('.')) return id;
+    
+    
+    let match = id.match(/^([A-Z])(\d)(\d+)$/);
+    if (match) {
+        let [, letter, firstDigit, rest] = match;
+        let formatted = letter + firstDigit;
+        for (let char of rest) {
+            formatted += '.' + char;
+        }
+        return formatted;
+    }
+    return id;
+}
+
+function escapeXML(str) {
+    if (!str) return '';
+    return str.replace(/&/g, '&amp;')
+              .replace(/</g, '&lt;')
+              .replace(/>/g, '&gt;')
+              .replace(/"/g, '&quot;')
+              .replace(/'/g, '&apos;');
+}
+
+function downloadFile(filename, content) {
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+
+
+
+
+let treeData = null;
+let svg = null;
+let g = null;
+let tree = null;
+let root = null;
+
+function generateInteractiveTree() {
+    if (db.functions.length === 0) {
+        alert("Aucune fonction définie!");
+        return;
+    }
+    
+    
+    treeData = buildHierarchy();
+    
+    
+    document.getElementById('treeContainer').style.display = 'block';
+    
+    
+    d3.select("#treeSvg").selectAll("*").remove();
+    
+    
+    const width = 1800;
+    const height = 1200;
+    
+    
+    svg = d3.select("#treeSvg")
+        .attr("width", "100%")
+        .attr("height", "100%")
+        .attr("viewBox", `0 0 ${width} ${height}`)
+        .call(d3.zoom()
+            .scaleExtent([0.1, 3])
+            .on("zoom", (event) => {
+                g.attr("transform", event.transform);
+            }));
+    
+    g = svg.append("g")
+        .attr("transform", `translate(${width/2},${height/2})`);
+    
+    
+    tree = d3.tree()
+        .size([height - 150, width/2 - 150])
+        .separation((a, b) => (a.parent == b.parent ? 0.8 : 1.0)); 
+    
+    
+    root = d3.hierarchy(treeData);
+    root.x0 = 0;
+    root.y0 = 0;
+    
+    
+    
+    
+    update(root);
+}
+
+function buildHierarchy() {
+    
+    const funcMap = {};
+    db.functions.forEach(f => {
+        funcMap[f.id] = {
+            id: f.id,
+            name: f.name,
+            description: f.description,
+            children: []
+        };
+    });
+    
+    
+    let rootNodes = [];
+    db.functions.forEach(f => {
+        if (f.parent && funcMap[f.parent]) {
+            funcMap[f.parent].children.push(funcMap[f.id]);
+        } else {
+            rootNodes.push(funcMap[f.id]);
+        }
+    });
+    
+    
+    if (rootNodes.length > 1) {
+        return {
+            id: "ROOT",
+            name: "SYSTÈME GPS 4D",
+            description: "Racine du système",
+            children: rootNodes
+        };
+    } else if (rootNodes.length === 1) {
+        return rootNodes[0];
+    } else {
+        return {
+            id: "EMPTY",
+            name: "Aucune fonction",
+            description: "",
+            children: []
+        };
+    }
+}
+
+function collapse(d) {
+    if (d.children) {
+        d._children = d.children;
+        d._children.forEach(collapse);
+        d.children = null;
+    }
+}
+
+function expand(d) {
+    if (d._children) {
+        d.children = d._children;
+        d.children.forEach(expand);
+        d._children = null;
+    }
+}
+
+function exportTreePNG() {
+    
+    if (!root) {
+        alert('Veuillez d\'abord générer l\'arbre interactif!');
+        return;
+    }
+    
+    const svgElement = document.getElementById('treeSvg');
+    
+    
+    const gElement = g.node();
+    const bbox = gElement.getBBox();
+    
+    
+    const padding = 150;
+    const width = Math.ceil(bbox.width + padding * 2);
+    const height = Math.ceil(bbox.height + padding * 2);
+    
+    
+    const exportSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    exportSvg.setAttribute('width', width);
+    exportSvg.setAttribute('height', height);
+    exportSvg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+    
+    
+    const gClone = gElement.cloneNode(true);
+    
+    
+    const translateX = -bbox.x + padding;
+    const translateY = -bbox.y + padding;
+    gClone.setAttribute('transform', `translate(${translateX},${translateY})`);
+    
+    exportSvg.appendChild(gClone);
+    
+    
+    const styleElement = document.createElementNS("http://www.w3.org/2000/svg", "style");
+    styleElement.textContent = `
+        .node circle { fill: #e3f2fd; stroke: #1976d2; stroke-width: 2px; }
+        .node circle.collapsed { fill: #1976d2; }
+        .link { fill: none; stroke: #ccc; stroke-width: 2px; }
+        text { font-family: Arial, sans-serif; font-size: 16px; font-weight: 600; fill: #000; }
+    `;
+    exportSvg.insertBefore(styleElement, exportSvg.firstChild);
+    
+    const serializer = new XMLSerializer();
+    let svgString = serializer.serializeToString(exportSvg);
+    
+    
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    
+    const scale = 2;
+    canvas.width = width * scale;
+    canvas.height = height * scale;
+    ctx.scale(scale, scale);
+    
+    
+    const img = new Image();
+    const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    
+    img.onload = function() {
+        
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, width, height);
+        
+        
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        
+        canvas.toBlob(function(blob) {
+            const pngUrl = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = pngUrl;
+            a.download = 'sadt-tree.png';
+            a.click();
+            URL.revokeObjectURL(pngUrl);
+        });
+        
+        URL.revokeObjectURL(url);
+    };
+    
+    img.onerror = function(e) {
+        console.error('Error loading SVG:', e);
+        alert('Erreur lors de l\'export PNG. Essayez l\'export SVG à la place.');
+    };
+    
+    img.src = url;
+}
+
+function update(source) {
+    
+    const treeData = tree(root);
+    const nodes = treeData.descendants();
+    const links = treeData.links();
+    
+    
+    nodes.forEach((d, i) => {
+        d.y = d.depth * 380; 
+        
+        if (d.depth === 1 && root.children) {
+            const index = root.children.indexOf(d);
+            if (index % 2 === 0) {
+                d.y = d.y; 
+            } else {
+                d.y = -d.y; 
+            }
+        } else if (d.depth > 1) {
+            
+            d.y = d.parent.y > 0 ? d.depth * 380 : -d.depth * 380;
+        }
+    });
+    
+    
+    const node = g.selectAll(".node")
+        .data(nodes, d => d.data.id);
+    
+    
+    const nodeEnter = node.enter().append("g")
+        .attr("class", "node")
+        .attr("transform", d => `translate(${source.y0},${source.x0})`)
+        .on("click", click);
+    
+    nodeEnter.append("circle")
+        .attr("r", 10)
+        .style("fill", d => d._children ? "#1976d2" : "#e3f2fd")
+        .style("stroke", "#1976d2")
+        .style("stroke-width", "2px")
+        .style("cursor", "pointer");
+    
+    nodeEnter.append("text")
+        .attr("dy", ".35em")
+        .attr("x", d => d.y > 0 || d.depth === 0 ? 15 : -15)
+        .attr("text-anchor", d => d.y > 0 || d.depth === 0 ? "start" : "end")
+        .text(d => `${formatFunctionId(d.data.id)}: ${d.data.name}`)
+        .style("font-size", "16px")
+        .style("font-family", "Arial, sans-serif")
+        .style("font-weight", "600")
+        .style("cursor", "pointer")
+        .clone(true).lower()
+        .attr("stroke", "white")
+        .attr("stroke-width", 5);
+    
+    
+    const nodeUpdate = nodeEnter.merge(node);
+    
+    nodeUpdate.transition()
+        .duration(750)
+        .attr("transform", d => `translate(${d.y},${d.x})`);
+    
+    nodeUpdate.select("circle")
+        .style("fill", d => d._children ? "#1976d2" : "#e3f2fd");
+    
+    nodeUpdate.select("text")
+        .attr("x", d => d.y > 0 || d.depth === 0 ? 15 : -15)
+        .attr("text-anchor", d => d.y > 0 || d.depth === 0 ? "start" : "end");
+    
+    
+    const nodeExit = node.exit().transition()
+        .duration(750)
+        .attr("transform", d => `translate(${source.y},${source.x})`)
+        .remove();
+    
+    nodeExit.select("circle")
+        .attr("r", 1e-6);
+    
+    nodeExit.select("text")
+        .style("fill-opacity", 1e-6);
+    
+    
+    const link = g.selectAll(".link")
+        .data(links, d => d.target.data.id);
+    
+    
+    const linkEnter = link.enter().insert("path", "g")
+        .attr("class", "link")
+        .attr("d", d => {
+            const o = {x: source.x0, y: source.y0};
+            return diagonal(o, o);
+        })
+        .style("fill", "none")
+        .style("stroke", "#ccc")
+        .style("stroke-width", "2px");
+    
+    
+    linkEnter.merge(link).transition()
+        .duration(750)
+        .attr("d", d => diagonal(d.source, d.target));
+    
+    
+    link.exit().transition()
+        .duration(750)
+        .attr("d", d => {
+            const o = {x: source.x, y: source.y};
+            return diagonal(o, o);
+        })
+        .remove();
+    
+    
+    nodes.forEach(d => {
+        d.x0 = d.x;
+        d.y0 = d.y;
+    });
+}
+
+function diagonal(s, d) {
+    return `M ${s.y} ${s.x}
+            C ${(s.y + d.y) / 2} ${s.x},
+              ${(s.y + d.y) / 2} ${d.x},
+              ${d.y} ${d.x}`;
+}
+
+function click(event, d) {
+    if (d.children) {
+        d._children = d.children;
+        d.children = null;
+    } else {
+        d.children = d._children;
+        d._children = null;
+    }
+    update(d);
+}
+
+function exportTreeSVG() {
+    const svgElement = document.getElementById('treeSvg');
+    const serializer = new XMLSerializer();
+    const svgString = serializer.serializeToString(svgElement);
+    
+    
+    const fullSvg = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE svg PUBLIC "-
+${svgString}`;
+    
+    downloadFile('sadt-tree.svg', fullSvg);
+}
+
+</script>
+
+</body>
+</html>
