@@ -356,8 +356,8 @@ function addICOM(type) {
     }
 }
 
-function removeICOM(type, item) {
-    currentICOM[type] = currentICOM[type].filter(i => i !== item);
+function removeICOM(type, index) {
+    currentICOM[type].splice(index, 1);
     refreshICOMDisplay(type);
 }
 
@@ -371,11 +371,11 @@ function refreshICOMDisplay(type) {
         return;
     }
     
-    currentICOM[type].forEach(item => {
+    currentICOM[type].forEach((item, index) => {
         const div = document.createElement('div');
         div.className = 'icom-item';
         const escapedItem = escapeHTML(item);
-        div.innerHTML = `${item} <span style="float:right;cursor:pointer;color:red;font-weight:bold;" onclick="removeICOM('${type}', '${escapedItem}')">X</span>`;
+        div.innerHTML = `${item} <span style="float:right;cursor:pointer;color:red;font-weight:bold;" onclick="removeICOM('${type}', ${index})">X</span>`;
         listDiv.appendChild(div);
     });
 }
