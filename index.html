@@ -1,6 +1,6 @@
 <!DOCTYPE html>
-<html lang="fr">
-<head>
+<html lang="fr"><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <meta charset="UTF-8">
 <title>Gestionnaire Besoin Fonctionnels</title>
 <style>
@@ -166,9 +166,7 @@ legend {
 </div>
 <div class="input-group">
     <label>Fonction Parente:</label>
-    <select id="funcParent">
-        <option value="">-- Niveau Racine --</option>
-    </select>
+    <select id="funcParent"><option value="" selected="selected">-- Niveau Racine --</option></select>
 </div>
 <div class="input-group">
     <label>Description:</label>
@@ -212,11 +210,11 @@ legend {
 <button class="btn-primary" onclick="addFunction()">AJOUTER FONCTION</button>
 <button onclick="updateFunction()">METTRE À JOUR</button>
 <button onclick="clearFunctionForm()">EFFACER FORMULAIRE</button>
-</fieldset>
+
 
 <fieldset>
 <legend>Base de Données des Fonctions</legend>
-<div class="function-list" id="functionList"></div>
+<div class="function-list" id="functionList"><div style="padding:10px;color:#808080;">Aucune fonction définie</div></div>
 <button onclick="deleteFunction()">SUPPRIMER SÉLECTION</button>
 <button onclick="viewFunction()">VOIR DÉTAILS</button>
 </fieldset>
@@ -229,7 +227,7 @@ legend {
 <p>Visualisation interactive de la hiérarchie des fonctions. <strong>Cliquez sur les nœuds</strong> pour développer/réduire. <strong>Glissez avec la souris</strong> pour naviguer. <strong>Molette</strong> pour zoomer.</p>
 <div style="margin-bottom:10px;">
 <button class="btn-primary" onclick="generateInteractiveTree()">GÉNÉRER ARBRE INTERACTIF</button>
-<button onclick="exportTreeSVG()">EXPORTER SVG</button>
+<!--- <button onclick="exportTreeSVG()">EXPORTER SVG</button> --->
 <button onclick="exportTreePNG()">EXPORTER PNG</button>
 <button onclick="generateMermaid()">GÉNÉRER MERMAID (texte)</button>
 </div>
@@ -249,22 +247,23 @@ legend {
 <div class="content">
 <fieldset>
 <legend>Export Complet de la Base</legend>
-<button class="btn-primary" onclick="exportAllJSON()">EXPORTER TOUT (JSON)</button>
-<button onclick="exportAllXML()">EXPORTER TOUT (XML)</button>
+<!---<button class="btn-primary" onclick="exportAllJSON()">EXPORTER TOUT (JSON)</button>--->
+<button class="btn-primary"  onclick="exportAllBee()">EXPORTER TOUT (.bee)</button>
+<!--- <button onclick="exportAllXML()">EXPORTER TOUT (XML)</button> --->
 <button class="btn-primary" onclick="exportAllZIP()">EXPORTER TOUT EN ZIP</button>
-<p style="font-size:10px;color:#666;">ZIP contient: BD complète JSON/XML + tous les PNG SADT + vue d'ensemble Mermaid</p>
+<p style="font-size:10px;color:#666;">ZIP contient: BD complète DOTBEE + tous les PNG SADT + vue d'ensemble Mermaid</p>
 </fieldset>
-
+<!---
 <fieldset>
 <legend>Export de Fonction Individuelle</legend>
 <button onclick="exportFunctionJSON()">EXPORTER SÉLECTION (JSON)</button>
 <button onclick="exportFunctionXML()">EXPORTER SÉLECTION (XML)</button>
 <button onclick="exportFunctionMermaid()">EXPORTER SÉLECTION (MERMAID SADT-0)</button>
 </fieldset>
-
+--->
 <fieldset>
 <legend>Import Base de Données</legend>
-<input type="file" id="importFile" accept=".json,.xml">
+<input type="file" id="importFile" accept=".bee">
 <button class="btn-primary" onclick="importData()">IMPORTER FICHIER</button>
 </fieldset>
 
@@ -693,6 +692,100 @@ function exportAllJSON() {
     document.getElementById('exportBox').style.display = 'block';
 }
 
+function exportAllBee() {
+    let bee = `<m project="${db.metadata.project || 'SADT'}" version="${db.version}">\n`;
+
+    db.functions.forEach(f => {
+        bee += `  <f>\n`;
+        bee += `    <i="${f.id}">\n`;
+        bee += `    <h>${f.name}</>\n`;
+
+        if (f.parent) bee += `    <parent="${f.parent}">\n`;
+        if (f.description) bee += `    <t>${f.description}</>\n`;
+
+        const map = { inputs:'i', controls:'c', outputs:'o', mechanisms:'m' };
+
+        Object.keys(map).forEach(k => {
+            if (f[k] && f[k].length) {
+                bee += `    <g type="${map[k]}">\n`;
+                f[k].forEach(v => bee += `      <c>${v}</>\n`);
+                bee += `    </>\n`;
+            }
+        });
+
+        bee += `  </f>\n`;
+    });
+
+    bee += `</m>`;
+
+    downloadFile('base-sadt.bee', bee);
+    document.getElementById('exportContent').textContent = bee;
+    document.getElementById('exportBox').style.display = 'block';
+}
+
+function parseBeeDatabase(text) {
+    const functions = [];
+    
+    const funcBlocks = text.split('<f>');
+    funcBlocks.shift(); 
+
+    funcBlocks.forEach(block => {
+        const getAttr = (regex) => {
+            const m = block.match(regex);
+            return m ? m[1].trim() : null;
+        };
+
+        const getTag = (regex) => {
+            const m = block.match(regex);
+            return m ? m[1].trim() : "";
+        };
+
+        const id = getAttr(/<i="([^"]+)">/);
+        const name = getTag(/<h>([\s\S]*?)<\/>/);
+        const parent = getAttr(/<parent="([^"]+)">/);
+        const description = getTag(/<t>([\s\S]*?)<\/>/);
+
+        const inputs = [];
+        const controls = [];
+        const outputs = [];
+        const mechanisms = [];
+
+        const groupParts = block.split('<g type="');
+        
+        for (let i = 1; i < groupParts.length; i++) {
+            const part = groupParts[i];
+            const type = part.charAt(0); 
+            
+            const itemRegex = /<c>([\s\S]*?)<\/>/g;
+            let imatch;
+            
+            while ((imatch = itemRegex.exec(part)) !== null) {
+                const value = imatch[1].trim();
+                
+                if (type === 'i') inputs.push(value);
+                if (type === 'c') controls.push(value);
+                if (type === 'o') outputs.push(value);
+                if (type === 'm') mechanisms.push(value);
+            }
+        }
+
+        if (id) {
+            functions.push({
+                id,
+                name,
+                parent: parent || null,
+                description,
+                inputs,
+                controls,
+                outputs,
+                mechanisms
+            });
+        }
+    });
+
+    return functions;
+}
+
 function exportAllXML() {
     const xml = generateDatabaseXML();
     downloadFile('base-sadt.xml', xml);
@@ -892,9 +985,29 @@ async function exportAllZIP() {
     const zip = new JSZip();
     
     
-    zip.file("base-sadt.json", JSON.stringify(db, null, 2));
-    zip.file("base-sadt.xml", generateDatabaseXML());
+    //zip.file("base-sadt.json", JSON.stringify(db, null, 2));
+    //zip.file("base-sadt.xml", generateDatabaseXML());
+    let beeContent = `<m project="${db.metadata.project || 'SADT'}" version="${db.version}">\n`;
+    db.functions.forEach(f => {
+        beeContent += `  <f>\n`;
+        beeContent += `    <i="${f.id}">\n`;
+        beeContent += `    <h>${f.name}</>\n`;
+        if (f.parent) beeContent += `    <parent="${f.parent}">\n`;
+        if (f.description) beeContent += `    <t>${f.description}</>\n`;
+
+        const map = { inputs:'i', controls:'c', outputs:'o', mechanisms:'m' };
+        Object.keys(map).forEach(k => {
+            if (f[k] && f[k].length) {
+                beeContent += `    <g type="${map[k]}">\n`;
+                f[k].forEach(v => beeContent += `      <c>${v}</>\n`);
+                beeContent += `    </>\n`;
+            }
+        });
+        beeContent += `  </f>\n`;
+    });
+    beeContent += `</m>`;
     
+    zip.file("base-sadt.bee", beeContent);
     
     for (const func of db.functions) {
         const formattedId = formatFunctionId(func.id);
@@ -1118,8 +1231,14 @@ function importData() {
                 }
             } else if (file.name.endsWith('.xml')) {
                 parseXMLDatabase(content);
+                db.metadata.modified = new Date().toISOString();
                 refreshUI();
                 alert(`Base de données XML importée avec succès! ${db.functions.length} fonction(s) chargée(s).`);
+            } else if (file.name.endsWith('.bee')) {
+                db.functions = parseBeeDatabase(content);
+                db.metadata.modified = new Date().toISOString();
+                refreshUI();
+                alert(`Base de données DotBee importée avec succès! ${db.functions.length} fonction(s) chargée(s).`);
             }
         } catch (err) {
             alert("Échec de l'import: " + err.message);
@@ -1624,5 +1743,6 @@ ${svgString}`;
 
 </script>
 
-</body>
-</html>
+
+
+</body></html>
